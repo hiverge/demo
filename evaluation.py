@@ -10,7 +10,7 @@ from contextlib import redirect_stdout
 import numpy as np
 from typing import Tuple, Optional
 
-from circle_packing import construct_packing
+from main import construct_packing
 
 def validate_packing(
     centers: np.ndarray, radii: np.ndarray, reported_sum: float, atol=1e-6,
