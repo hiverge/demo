@@ -1,9 +1,0 @@
-# pyproject.toml
-[project]
-name = "demo-project"
-version = "0.1.0"
-dependencies = [
-  "numpy",
-  "scipy",
-]
-requires-python = ">=3.9,<3.13"
