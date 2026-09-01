@@ -44,9 +44,12 @@ def validate_packing(
         msg = f"Radii shape incorrect. Expected ({n_expected},), got {radii.shape}"
         return False, msg
 
-    if np.any(radii < 0):
-        negative_indices = np.where(radii < 0)[0]
-        msg = f"Negative radii found for circles at indices: {negative_indices}"
+    if not np.all((centers >= 0) & (centers <= 1)):
+        msg = "Center outside the unit square."
+        return False, msg
+
+    if not np.all((radii >= 0) & (radii <= 1)):
+        msg = "Radius outside [0, 1]."
         return False, msg
 
     if not np.isclose(np.sum(radii), reported_sum, atol=atol):
