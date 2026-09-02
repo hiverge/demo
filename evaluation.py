@@ -4,13 +4,13 @@ Evaluator for circle packing example (n=26) with improved timeout handling
 
 import json
 import os
+import subprocess
 import sys
-from contextlib import redirect_stdout
+import tempfile
 
 import numpy as np
 from typing import Tuple, Optional
 
-from main import construct_packing
 
 def validate_packing(
     centers: np.ndarray, radii: np.ndarray, reported_sum: float, atol=1e-6,
@@ -82,10 +82,45 @@ def validate_packing(
                 return False, msg
     return True, msg
 
+
+def _produce(out_path: str) -> None:
+    from main import construct_packing
+
+    centers, radii = construct_packing()
+    np.savez(
+        out_path,
+        centers=np.asarray(centers, dtype=float),
+        radii=np.asarray(radii, dtype=float),
+    )
+
+
+def run_construct_packing() -> Tuple[np.ndarray, np.ndarray]:
+    fd, out_path = tempfile.mkstemp(suffix=".npz")
+    os.close(fd)
+    try:
+        proc = subprocess.run(
+            [sys.executable, os.path.abspath(__file__), "--produce", out_path],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if proc.returncode != 0:
+            raise ValueError(
+                f"construct_packing subprocess exited with {proc.returncode}"
+            )
+        with np.load(out_path, allow_pickle=False) as data:
+            return data["centers"], data["radii"]
+    finally:
+        os.unlink(out_path)
+
+
 if __name__ == "__main__":
+    if len(sys.argv) == 3 and sys.argv[1] == "--produce":
+        _produce(sys.argv[2])
+        sys.exit(0)
+
     # Run circle packing
-    with redirect_stdout(open(os.devnull, 'w')):
-        centers, radii = construct_packing()
+    centers, radii = run_construct_packing()
     sum_radii = np.sum(radii)
 
     # Validate the packing
